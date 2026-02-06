@@ -1014,6 +1014,8 @@ ax2.set_ylabel('Number of Features', color='coral')
 **Captured by:** Floor_Position, Is_First_Floor, Is_Top_Floor features.
 
 ---
+## Example of Prediction
+
 <div align="center">
   <img src="streamlit_prediction.png" alt="Stramlit " width="700">
   <p><em>A glimpse of the web application's user interface.</em></p>
