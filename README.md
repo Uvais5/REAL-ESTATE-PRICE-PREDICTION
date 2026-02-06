@@ -1,4 +1,4 @@
-# REAL-ESTATE-PRICE-PREDICTION
+# Real Estate Price Prediction 
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -755,20 +755,182 @@ Normalized to sum to 1.0
 
 ## Visualizations Guide
 
-### Summary of All Visualizations
+This section details the exact code used to generate the key visualizations in the pipeline. These plots are essential for validating each stage of the process, from initial data inspection to final model evaluation.
 
-| File | Purpose | Key Insights |
-|------|---------|--------------|
-| `01_target_distribution_raw.png` | Initial data quality | Skewness, outliers, normality |
-| `02_outlier_handling.png` | Impact of capping | How many records affected |
-| `03_feature_distributions.png` | Feature engineering validation | Are new features sensible? |
-| `04_feature_correlations.png` | Feature-target relationships | Which features matter? |
-| `05_train_test_split.png` | Split quality check | Are sets comparable? |
-| `06_target_encoding_stats.png` | Category-level analysis | Premium vs budget categories |
-| `07_predictions_analysis.png` | Model performance | Accuracy, bias, error patterns |
-| `08_learning_curves.png` | Data sufficiency & complexity | Overfitting, optimal depth |
-| `09_feature_importance.png` | Key price drivers | What matters most? |
-| `10_feature_categories.png` | Feature engineering ROI | Which types most valuable? |
+### 1. Raw Data Distribution
+**Purpose:** Visualize the initial distribution of prices and identify skewness.
+**Code:**
+```python
+axes[0].hist(df['PricePerMeter'], bins=100, edgecolor='black', alpha=0.7, color='steelblue')
+axes[0].set_title('Distribution of Price Per Meter (Raw Data)')
+axes[0].axvline(df['PricePerMeter'].mean(), color='red', linestyle='--', label=f'Mean: {df["PricePerMeter"].mean():.0f}')
+axes[0].axvline(df['PricePerMeter'].median(), color='green', linestyle='--', label=f'Median: {df["PricePerMeter"].median():.0f}')
+```
+
+### 2. Outlier Handling Impact
+**Purpose:** Compare distributions before and after capping outliers (3x IQR).
+**Code:**
+```python
+# Visualization 2: Before/After Outlier Handling
+fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+
+# PricePerMeter comparison
+axes[0, 0].hist(original_ppm, bins=100, alpha=0.7, color='red', edgecolor='black')
+axes[0, 0].axvline(ppm_cap, color='darkred', linestyle='--', linewidth=2, label=f'Cap: {ppm_cap:.0f}')
+axes[0, 0].set_title('PricePerMeter - BEFORE Capping')
+
+axes[1, 0].hist(df['PricePerMeter'], bins=100, alpha=0.7, color='green', edgecolor='black')
+axes[1, 0].axvline(ppm_cap, color='darkgreen', linestyle='--', linewidth=2, label=f'Cap: {ppm_cap:.0f}')
+axes[1, 0].set_title('PricePerMeter - AFTER Capping')
+```
+
+### 3. Key Feature Distributions
+**Purpose:** Detailed breakdown of room counts, construction timeline, quality scores, and floor positioning.
+**Code:**
+```python
+# Visualization 3: Key Feature Distributions
+fig, axes = plt.subplots(3, 3, figsize=(18, 15))
+
+# Room distribution
+room_counts = df['Rooms'].value_counts().sort_index()
+axes[0, 0].bar(room_counts.index, room_counts.values, color='steelblue', edgecolor='black')
+axes[0, 0].set_title('Distribution of Room Counts')
+
+# Years to wait
+wait_counts = df['YearsToWait'].value_counts().sort_index()
+axes[0, 1].bar(wait_counts.index, wait_counts.values, color='coral', edgecolor='black')
+axes[0, 1].set_title('Construction Timeline Distribution')
+
+# Quality score
+quality_counts = df['Quality_Score'].value_counts().sort_index()
+axes[0, 2].bar(quality_counts.index, quality_counts.values, color='gold', edgecolor='black')
+axes[0, 2].set_title('Distribution of Property Quality')
+```
+
+### 4. Feature Correlations
+**Purpose:** Identify relationships between numerical features and the target variable.
+**Code:**
+```python
+# Visualization 4: Correlation Heatmap
+plt.figure(figsize=(12, 10))
+sns.heatmap(df.corr(), annot=False, cmap='coolwarm', vmin=-1, vmax=1)
+plt.title('Feature Correlation Heatmap')
+```
+
+### 5. Price by Property Class
+**Purpose:** Validate the intuitive relationship that higher class equals higher price.
+**Code:**
+```python
+# Visualization 5: Price by Property Class
+plt.figure(figsize=(12, 6))
+sns.boxplot(x='Class', y='PricePerMeter', data=df, order=['Economy', 'Comfort', 'Business', 'Premium', 'Elite'])
+plt.title('Price Distribution by Property Class')
+```
+
+### 6. Target Encoding Statistics
+**Purpose:** Visual proof that target encoding effectively captures price differences across districts and classes.
+**Code:**
+```python
+# Visualization 6: Target Encoding Analysis
+fig, axes = plt.subplots(1, 2, figsize=(18, 6))
+
+# District prices
+district_stats = X_train_encoded.groupby('District')['District_Price_Mean'].mean().sort_values(ascending=False).head(15)
+axes[0].barh(range(len(district_stats)), district_stats.values, color='skyblue')
+axes[0].set_yticks(range(len(district_stats)))
+axes[0].set_yticklabels(district_stats.index)
+axes[0].set_title('Top 15 Districts by Mean Price (Target Encoded)')
+
+# Class prices
+class_stats = X_train_encoded.groupby('Class')['Class_Price_Mean'].mean().sort_values()
+axes[1].bar(class_stats.index, class_stats.values, color='lightgreen', edgecolor='black')
+axes[1].set_title('Mean Price by Class (Target Encoded)')
+```
+
+### 7. Predictions Analysis
+**Purpose:** Comprehensive evaluation of model performance (Linearity, Residuals, Error Normality).
+**Code:**
+```python
+# Visualization 7: Predictions Analysis
+fig, axes = plt.subplots(2, 2, figsize=(16, 14))
+
+# Actual vs Predicted
+axes[0, 0].scatter(y_test, y_pred, alpha=0.5, color='steelblue')
+axes[0, 0].plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=3)
+axes[0, 0].set_title(f'Actual vs Predicted Prices (R² = {r2_test:.4f})')
+
+# Residuals Plot
+residuals = y_test - y_pred
+axes[0, 1].scatter(y_pred, residuals, alpha=0.5, color='purple')
+axes[0, 1].axhline(y=0, color='r', linestyle='--')
+axes[0, 1].set_title('Residuals Plot')
+
+# Error Distribution
+sns.histplot(residuals, kde=True, ax=axes[1, 0], color='orange')
+axes[1, 0].set_title('Distribution of Errors')
+```
+
+### 8. Learning Curves
+**Purpose:** Diagnose overfitting/underfitting by plotting performance against training set size.
+**Code:**
+```python
+# Visualization 8: Learning Curves
+train_sizes, train_scores, test_scores = learning_curve(
+    model, X_train_encoded, y_train, cv=5, 
+    scoring='neg_root_mean_squared_error', n_jobs=-1,
+    train_sizes=np.linspace(0.1, 1.0, 10)
+)
+
+plt.figure(figsize=(10, 6))
+plt.plot(train_sizes, -np.mean(train_scores, axis=1), 'o-', color="r", label="Training score")
+plt.plot(train_sizes, -np.mean(test_scores, axis=1), 'o-', color="g", label="Cross-validation score")
+plt.title("Learning Curve (Gradient Boosting)")
+plt.xlabel("Training examples")
+plt.ylabel("RMSE")
+plt.legend(loc="best")
+```
+
+### 9. Feature Importance
+**Purpose:** Identify the top drivers of real estate prices.
+**Code:**
+```python
+# Visualization 9: Feature Importance
+fig, axes = plt.subplots(2, 1, figsize=(14, 12))
+
+# Top 30 features bar chart
+top_30 = feature_importance.head(30)
+colors = plt.cm.viridis(np.linspace(0.3, 0.9, len(top_30)))
+axes[0].barh(range(len(top_30)), top_30['importance'], color=colors)
+axes[0].set_yticks(range(len(top_30)))
+axes[0].set_yticklabels(top_30['feature'])
+axes[0].invert_yaxis()
+axes[0].set_title('Top 30 Feature Importances')
+
+# Cumulative importance
+cumsum = feature_importance['importance'].cumsum()
+axes[1].plot(range(1, len(cumsum) + 1), cumsum, linewidth=2, color='darkblue')
+axes[1].axhline(y=0.9, color='orange', linestyle='--', label='90% Threshold')
+axes[1].set_title('Cumulative Feature Importance')
+```
+
+### 10. Feature Categories Analysis
+**Purpose:** Quantify the ROI of different feature engineering strategies.
+**Code:**
+```python
+# Visualization 10: Feature Categories
+fig, ax = plt.subplots(figsize=(10, 6))
+
+categories = ['Target Encoded', 'Polynomial', 'Ratios', 'Binary Flags', 'Other']
+# ... [Calculated sums for each category] ...
+
+bars1 = ax.bar(x - width/2, importances, width, label='Total Importance', color='steelblue')
+ax2 = ax.twinx()
+bars2 = ax2.bar(x + width/2, counts, width, label='Feature Count', color='coral')
+
+ax.set_title('Feature Importance by Category')
+ax.set_ylabel('Total Importance', color='steelblue')
+ax2.set_ylabel('Number of Features', color='coral')
+```
 
 ---
 
@@ -929,11 +1091,11 @@ Normalized to sum to 1.0
 
 This pipeline demonstrates **production-grade machine learning** for real estate pricing:
 
-- **Leakage-free target encoding** ensures realistic performance
-- **Comprehensive feature engineering** captures market dynamics
-- **Conservative hyperparameters** ensure stability
-- **Extensive visualization** enables debugging and interpretation
-- **Proper evaluation** guards against overfitting
+✅ **Leakage-free target encoding** ensures realistic performance
+✅ **Comprehensive feature engineering** captures market dynamics
+✅ **Conservative hyperparameters** ensure stability
+✅ **Extensive visualization** enables debugging and interpretation
+✅ **Proper evaluation** guards against overfitting
 
 **Results:** 85-90% variance explained with minimal overfitting, providing reliable price estimates for real-world use.
 
