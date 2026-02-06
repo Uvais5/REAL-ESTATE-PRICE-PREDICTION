@@ -1014,7 +1014,12 @@ ax2.set_ylabel('Number of Features', color='coral')
 **Captured by:** Floor_Position, Is_First_Floor, Is_Top_Floor features.
 
 ---
+<div align="center">
+  <img src="streamlit_prediction.png" alt="Stramlit " width="700">
+  <p><em>A glimpse of the web application's user interface.</em></p>
+</div>
 
+---
 ## Best Practices
 
 ### For Data Scientists
@@ -1091,11 +1096,11 @@ ax2.set_ylabel('Number of Features', color='coral')
 
 This pipeline demonstrates **production-grade machine learning** for real estate pricing:
 
-✅ **Leakage-free target encoding** ensures realistic performance
-✅ **Comprehensive feature engineering** captures market dynamics
-✅ **Conservative hyperparameters** ensure stability
-✅ **Extensive visualization** enables debugging and interpretation
-✅ **Proper evaluation** guards against overfitting
+- **Leakage-free target encoding** ensures realistic performance
+- **Comprehensive feature engineering** captures market dynamics
+- **Conservative hyperparameters** ensure stability
+- **Extensive visualization** enables debugging and interpretation
+- **Proper evaluation** guards against overfitting
 
 **Results:** 85-90% variance explained with minimal overfitting, providing reliable price estimates for real-world use.
 
